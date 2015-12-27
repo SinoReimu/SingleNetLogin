@@ -17,24 +17,19 @@ ShowLoginUrl="http://115.239.134.163:8080/showlogin.do"
 echo "UserName:"
 read UserName
 echo "PassWord:"
-while : ; do
-    ret=`getchar`
-    if [ x$ret =  x ]; then
-        echo
-        break
-    fi
-    PassWord="$PassWord$ret"
-done
 
 #Module : EncryitPassword 
 #Function : parse the password and Encrypt it
 #Need Java Environment
-EPass=$(java EncryptPassword PassWord)
+stty cbreak -echo
+EPass=$(java EncryptPassword)
+stty -cbreak echo
+echo $EPass
 ipaddress=$(sudo ifconfig wlan0|grep "inet addr"|cut -d: -f2|awk '{print $1}')
 
 #First CURL get Uuid and LoginURL
 #More INFORMATION in README
-result1=$(curl -H "User-Agent:China Telecom Client" -d "wlanuserip=$ipaddress" $ShowLoginUrl)
+result1=$(curl -v -H "User-Agent:China Telecom Client" -d "wlanuserip=$ipaddress" $ShowLoginUrl)
 echo "[Handling Return content]"
 UserIP=$(echo $result1|awk -vFS="<UserIP>" '{print $2}'|awk -vFS="</UserIP>" '{print $1}')
 Uuid=$(echo $result1|awk -vFS="<Uuid>" '{print $2}'|awk -vFS="</Uuid>" '{print $1}')
@@ -47,13 +42,8 @@ fi
 #Second CURL regist user in server
 #and get LogoffURL 
 echo UserName is $UserName , IpAddress is $ipaddress Logining
-result2=$(curl -H "User-Agent:China Telecom Client" -d \
-	"username=$UserName\
-	&&password=$EPass\
-	&&userip=$ipaddress\
-	&&ratingtype=1\
-	&&uuid=$Uuid"\
-	 $LoginURL)
+result2=$(curl -v -H "User-Agent:China Telecom Client" -d "username=$UserName&&password=$EPass&&userip=$ipaddress&&ratingtype=1&&uuid=$Uuid" $LoginURL)
+echo $result2
 resp=$(echo $result2|awk -vFS="<ResponseCode>" '{print $2}'|awk -vFS="</ResponseCode>" '{print $1}')
 if [ x$resp != x"200" ]; then
 	echo Login Success
