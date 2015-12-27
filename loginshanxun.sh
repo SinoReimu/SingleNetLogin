@@ -14,18 +14,19 @@ getchar() {
 #const URL to finish the first step certification
 ShowLoginUrl="http://115.239.134.163:8080/showlogin.do"
 
+echo "NetInterface"
+read NetInterface
 echo "UserName:"
 read UserName
 echo "PassWord:"
+read -s Password
 
 #Module : EncryitPassword 
 #Function : parse the password and Encrypt it
 #Need Java Environment
-stty cbreak -echo
-EPass=$(java EncryptPassword)
-stty -cbreak echo
+EPass=$(java EncryptPassword $Password)
 echo $EPass
-ipaddress=$(sudo ifconfig wlan0|grep "inet addr"|cut -d: -f2|awk '{print $1}')
+ipaddress=$(sudo ifconfig $NetInterface |grep "inet addr"|cut -d: -f2|awk '{print $1}')
 
 #First CURL get Uuid and LoginURL
 #More INFORMATION in README
