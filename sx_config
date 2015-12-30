@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#Author:Hakurei Sino
+#Version:1.0
+#Fuction:A interface to handle more necessary configure
+key=$1
+echo "Please Enter a value for $key:"
+read value
+./gconfig.sh -set $key $value
+echo "DONE"

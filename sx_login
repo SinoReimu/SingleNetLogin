@@ -4,18 +4,17 @@
 #Version:1.0
 #Fuction:Login SingleNet in Linux
 
-getchar() {
-#Password Protect
-    stty cbreak -echo
-    dd if=/dev/tty bs=1 count=1 2> /dev/null
-    stty -cbreak echo
-}
 
 #const URL to finish the first step certification
 ShowLoginUrl="http://115.239.134.163:8080/showlogin.do"
 
-echo "UserName:"
-read UserName
+NetInterface=$(./sx_gconfig -get NetInterface)
+UserName=$(./sx_gconfig -get UserName)
+if [[ x$(echo $NetInterface|grep "[ERROR]")!=x"" ]]||[[ x$(echo $UserName|grep "[ERROR]")!=x"" ]]; then
+	echo "[Configure Error]Please set some config first!"
+	./sx_config
+	exit 1
+fi
 echo "PassWord:"
 
 #Module : EncryitPassword 
@@ -24,8 +23,7 @@ echo "PassWord:"
 stty cbreak -echo
 EPass=$(java EncryptPassword)
 stty -cbreak echo
-echo $EPass
-ipaddress=$(sudo ifconfig wlan0|grep "inet addr"|cut -d: -f2|awk '{print $1}')
+ipaddress=$(sudo ifconfig $NetInterface|grep "inet addr"|cut -d: -f2|awk '{print $1}')
 
 #First CURL get Uuid and LoginURL
 #More INFORMATION in README
@@ -42,8 +40,8 @@ fi
 #Second CURL regist user in server
 #and get LogoffURL 
 echo UserName is $UserName , IpAddress is $ipaddress Logining
-result2=$(curl -v -H "User-Agent:China Telecom Client" -d "username=$UserName&&password=$EPass&&userip=$ipaddress&&ratingtype=1&&uuid=$Uuid" $LoginURL)
-echo $result2
+result2=$(curl -H "User-Agent:China Telecom Client" -d "username=$UserName&&password=$EPass&&userip=$ipaddress&&ratingtype=1&&uuid=$Uuid" $LoginURL)
+echo
 resp=$(echo $result2|awk -vFS="<ResponseCode>" '{print $2}'|awk -vFS="</ResponseCode>" '{print $1}')
 if [ x$resp != x"200" ]; then
 	echo Login Success

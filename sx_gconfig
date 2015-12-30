@@ -1,0 +1,52 @@
+#!/bin/bash
+
+#Author:Hakurei Sino
+#Version:1.0
+#Fuction:Save and Handle config File
+
+iniFile="./config.ini"
+
+#if Config file miss , create it while [-p] param not used
+if [ ! -f "$iniFile" ]; then 
+   touch "$iniFile" 
+fi
+
+if [[ x$1 = x"-get" ]]; then
+	result=$(grep -i $2"=" $iniFile|cut -d= -f2)
+	if [[ x$result = x ]]; then
+		echo "[ERROR] can't find this value"
+	else
+		echo $result
+     fi 
+elif [[ x$1 = x"-set" ]]; then
+	key=$2
+	value=$3
+	if [[ x$2 = x ]]||[[ x$3 = x ]]; then
+		echo "[ERROR] necessary params miss!"
+		exit 1
+	fi
+	if [[ x$2 = x"-p" ]]; then
+	    key = $3
+	    value = $4
+        if [[ x$4 = x ]]; then
+        	echo "[ERROR] necessary params miss!"
+        fi
+	fi
+	line=$(grep -i $key"=" $iniFile)
+	if [[ x$line = x ]]; then
+         if [[ x$2 = x"-p" ]]; then
+		echo "[ERROR] can't find this value"
+		exit 1
+     	else
+		echo "$key= ">>$iniFile 
+		line="$key= "
+		fi
+	fi
+	sed -i "s/$line/$key=$value/g" config.ini
+elif [[ x$1 = x"-help" ]]; then
+	echo "config.sh -set [key] [value] to save a key-value pair to config file\n   [-p] : if this key is not in , don't create it(append default)"
+	exit 1
+else
+	echo "Wrong args Input,\"-help\" for more help"
+	exit 0
+fi
