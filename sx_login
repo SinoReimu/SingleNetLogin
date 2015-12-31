@@ -10,24 +10,30 @@ ShowLoginUrl="http://115.239.134.163:8080/showlogin.do"
 
 NetInterface=$(./sx_gconfig -get NetInterface)
 UserName=$(./sx_gconfig -get UserName)
-if [[ x$(echo $NetInterface|grep "[ERROR]")!=x"" ]]||[[ x$(echo $UserName|grep "[ERROR]")!=x"" ]]; then
+if [[ x$(echo $UserName|grep "[ERROR]"|sed 'N;s/\n//g') != x ]]; then
 	echo "[Configure Error]Please set some config first!"
-	./sx_config
-	exit 1
+	./sx_config "UserName"
 fi
+
+#default option for NetInterface is wlan0
+if [[ x$(echo $NetInterface|grep "[ERROR]") != x ]]; then
+	NetInterface="wlan0"
+fi
+
 echo "PassWord:"
+read -s PassWord
+echo "Please Wait for a moment"
 
 #Module : EncryitPassword 
 #Function : parse the password and Encrypt it
 #Need Java Environment
-stty cbreak -echo
-EPass=$(java EncryptPassword)
-stty -cbreak echo
+
+EPass=$(java EncryptPassword "$PassWord")
 ipaddress=$(sudo ifconfig $NetInterface|grep "inet addr"|cut -d: -f2|awk '{print $1}')
 
 #First CURL get Uuid and LoginURL
 #More INFORMATION in README
-result1=$(curl -v -H "User-Agent:China Telecom Client" -d "wlanuserip=$ipaddress" $ShowLoginUrl)
+result1=$(curl -H "User-Agent:China Telecom Client" -d "wlanuserip=$ipaddress" $ShowLoginUrl)
 echo "[Handling Return content]"
 UserIP=$(echo $result1|awk -vFS="<UserIP>" '{print $2}'|awk -vFS="</UserIP>" '{print $1}')
 Uuid=$(echo $result1|awk -vFS="<Uuid>" '{print $2}'|awk -vFS="</Uuid>" '{print $1}')
@@ -41,9 +47,8 @@ fi
 #and get LogoffURL 
 echo UserName is $UserName , IpAddress is $ipaddress Logining
 result2=$(curl -H "User-Agent:China Telecom Client" -d "username=$UserName&&password=$EPass&&userip=$ipaddress&&ratingtype=1&&uuid=$Uuid" $LoginURL)
-echo
 resp=$(echo $result2|awk -vFS="<ResponseCode>" '{print $2}'|awk -vFS="</ResponseCode>" '{print $1}')
-if [ x$resp != x"200" ]; then
+if [ x$resp = x"200" ]; then
 	echo Login Success
 	exit 0
 fi

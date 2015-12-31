@@ -8,8 +8,12 @@ import java.security.MessageDigest;
 public class EncryptPassword{
      static String str1,str2;
 	public static void main(String args[]){
-		Scanner s=new Scanner(System.in);
-		str1=s.next();
+           if(args.length<1){
+		System.out.println("[ERROR] Important param miss!");
+ 		return;            
+		}else 
+              str1=args[0];
+		
            try{
            str2 = encrypt(md5("7%ChIna3#@Net*%"), str1);
            System.out.println(str2);

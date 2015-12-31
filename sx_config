@@ -6,5 +6,5 @@
 key=$1
 echo "Please Enter a value for $key:"
 read value
-./gconfig.sh -set $key $value
+./sx_gconfig -set $key $value
 echo "DONE"
